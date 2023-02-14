@@ -8,14 +8,7 @@ import pandas
 import subprocess
 
 import pytest
-
-try:
-    from src.utils.memCpuTests import *
-except:
-    try:
-        from memCpuTests import *
-    except:
-        from utils.memCpuTests import *
+import tests
 
 
 class FirstSort(Enum):
@@ -171,6 +164,7 @@ if __name__ == "__main__":
     requirements = Requirements(sort=firstSort, **requirementsDict)
 
     hinfo = subprocess.run(['hinfo'], capture_output=True).stdout.decode('ascii')
+    #hinfo = tests.tests[1]
     mem, cpu = cpuMem(hinfo, requirements)
 
     print('found mem', mem, 'and cpu', cpu, 'before margin')
@@ -178,7 +172,10 @@ if __name__ == "__main__":
     file = open(args.pbs_config_file, 'r').read()
 
     outfile = open(args.out_file, 'w+')
-    outfile.write(file.replace('${PPN}', str(cpu)).replace('${MEM}', str(mem)))
+    file = file.replace('${PPN}', str(cpu)).replace('${MEM}', str(mem))
+    if mem < 22: # less than 22 GB is not high_mem
+    	file = file.replace('#PBS -q high_mem','')
+    outfile.write(file)
     outfile.close()
 
     outFile2 = open('clusterconf', 'w+')
